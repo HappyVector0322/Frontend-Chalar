@@ -9,7 +9,7 @@ const authRoute = require("./routes/authRoutes");
 const emailRoute = require("./routes/emailRoutes");
 const sendRoute = require("./routes/sendRoues");
 
-const PORT = process.env.PORT || 3000;
+const PORT =  3000;
 
 const app = express();
 connectDB();
