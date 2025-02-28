@@ -57,14 +57,11 @@ exports.authorize = (req, res) => {
   const redirectUri = process.env.HUBSPOT_REDIRECT_URI;
   const scopes = process.env.scopes;
   // console.log(clientId);
-  console.log("here");
-  console.log(clientId);
   if (clientId !== undefined) {
     // const authorizationUrl = `https://app.hubspot.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes}`;
     //  const authorizationUrl = 'https://app-na2.hubspot.com/oauth/authorize?client_id=08b2c303-792b-42f1-b0ec-f7ddbf53f4b3&redirect_uri=https://real-front-chalar.vercel.app/api/auth/oauth-callback&scope=content%20automation%20oauth%20crm.objects.contacts.read';
-     const authorizationUrl =  'https://app-na2.hubspot.com/oauth/authorize?client_id=08b2c303-792b-42f1-b0ec-f7ddbf53f4b3&redirect_uri=https://real-front-chalar.vercel.app/api/auth/oauth-callback&scope=content%20automation%20oauth%20crm.objects.contacts.read'
+     const authorizationUrl =  'https://app-na2.hubspot.com/oauth/authorize?client_id=08b2c303-792b-42f1-b0ec-f7ddbf53f4b3&redirect_uri=https://https://frontend-build-fawn.vercel.app/api/auth/oauth-callback&scope=content%20automation%20oauth%20crm.objects.contacts.read'
     //  const authorizationUrl = 'https://app-na2.hubspot.com/oauth/authorize?client_id=08b2c303-792b-42f1-b0ec-f7ddbf53f4b3&redirect_uri=https://chalar.ngrok.app/api/auth/oauth-callback&scope=content%20automation%20oauth%20crm.objects.contacts.read';
-    console.log('success');
     res.status(200).json({"redirect_url": authorizationUrl}); 
   } else {  
     // Handle case where clientId is undefined, perhaps return a 400 or 500 error  
