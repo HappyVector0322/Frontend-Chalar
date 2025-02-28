@@ -14,15 +14,12 @@ const PORT =  3000;
 const app = express();
 connectDB();
 
-// app.use(
-//   cors({
-//     origin: "*",
-//   })
-// );
-app.use(cors({  
-  origin: 'https://frontend-build-fawn.vercel.app',  
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']  
-}));  
+app.use(
+  cors({
+    origin: "*",
+  })
+);
+
 
 app.use(express.json());
 
