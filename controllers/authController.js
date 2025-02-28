@@ -63,8 +63,11 @@ exports.authorize = (req, res) => {
     //  const authorizationUrl = 'https://app-na2.hubspot.com/oauth/authorize?client_id=08b2c303-792b-42f1-b0ec-f7ddbf53f4b3&redirect_uri=https://real-front-chalar.vercel.app/api/auth/oauth-callback&scope=content%20automation%20oauth%20crm.objects.contacts.read';
      const authorizationUrl =  'https://app-na2.hubspot.com/oauth/authorize?client_id=08b2c303-792b-42f1-b0ec-f7ddbf53f4b3&redirect_uri=https://real-front-chalar.vercel.app/api/auth/oauth-callback&scope=content%20automation%20oauth%20crm.objects.contacts.read'
     //  const authorizationUrl = 'https://app-na2.hubspot.com/oauth/authorize?client_id=08b2c303-792b-42f1-b0ec-f7ddbf53f4b3&redirect_uri=https://chalar.ngrok.app/api/auth/oauth-callback&scope=content%20automation%20oauth%20crm.objects.contacts.read';
-    res.json({"redirect_url":authorizationUrl});
-  }
+    res.status(200).json({"redirect_url": authorizationUrl}); 
+  } else {  
+    // Handle case where clientId is undefined, perhaps return a 400 or 500 error  
+    res.status(400).json({ error: "Client ID is undefined" });  
+}  
 };
 
 exports.oauthCallback = async (req, res) => {
