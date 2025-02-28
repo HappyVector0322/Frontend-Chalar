@@ -56,10 +56,11 @@ exports.authorize = (req, res) => {
   const clientId = process.env.HUBSPOT_CLIENT_ID;
   const redirectUri = process.env.HUBSPOT_REDIRECT_URI;
   const scopes = process.env.scopes;
-  console.log(clientId);
+  // console.log(clientId);
+  console.log("here")
   if (clientId !== undefined) {
     // const authorizationUrl = `https://app.hubspot.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes}`;
-    const authorizationUrl = 'https://app-na2.hubspot.com/oauth/authorize?client_id=08b2c303-792b-42f1-b0ec-f7ddbf53f4b3&redirect_uri=http://localhost:3000/oauth/callback&scope=content%20automation%20oauth%20crm.objects.contacts.read';
+     const authorizationUrl = 'https://app-na2.hubspot.com/oauth/authorize?client_id=08b2c303-792b-42f1-b0ec-f7ddbf53f4b3&redirect_uri=http://localhost:3000/api/auth/oauth-callback&scope=content%20automation%20oauth%20crm.objects.contacts.read';
 
     res.json({"redirect_url":authorizationUrl});
   }
@@ -86,10 +87,20 @@ exports.oauthCallback = async (req, res) => {
       }
     });
     const { access_token, refresh_token, expires_in } = response.data;
-    saveTokens({ accessToken: access_token, refreshToken: refresh_token, expiresAt: Date.now() + expires_in * 1000 });
 
-    // res.status(200).json(accessToken);
-    res.redirect(`http://localhost:3000/authorize?accessToken=${access_token}`);
+    saveTokens({ accessToken: access_token, refreshToken: refresh_token, expiresAt: Date.now() + expires_in * 1000 });
+    console.log(access_token);
+    console.log(refresh_token);
+
+    // res.status(200).json(access_token);
+    // console.log("success");
+    // res.redirect('/success');
+    // res.setHeader( 'Content—Type' , 'text/html' );
+    // res.write('<hd>Succesfully installed integration, you can close the page</h4>');
+    // res.end();
+    // res.redirect(`http://localhost:3000/authorize?accessToken=${access_token}`);
+    res.redirect(`http://localhost:3001`);
+
   } catch (error) {
     console.error("Error during OAuth callback:", error.message);
     res.status(500).send("Error during OAuth process");

@@ -1,11 +1,12 @@
-const axios = require("axios");
 const cron = require("node-cron");
 const hubspotService = require("../services/hubspotService");
-
+const hubspot = require('@hubspot/api-client');
 const HUBSPOT_API_KEY = "your-hubspot-api-key";
 const ORIGINAL_EMAIL_ID = "313117845";
 const FOLLOWUP_EMAIL_ID = "312705699";
-
+const axios = require('axios');
+const FormData = require('form-data');    
+const fs = require('fs');
 // exports.GetNonOpeners = async (req, res) => {
 //   try {
 //     const response = await axios.get(
@@ -239,3 +240,149 @@ exports.sendFollowUpEmail = async (req, res) => {
   // }
   res.json(subjectline);
 };
+
+
+exports.fetchCalls = async (req, res) => {
+  const accessToken = req.query.accessToken;
+  if (!accessToken) {
+    return res.status(400).json({ error: "Access token is required" });
+  }
+
+  try {
+    // Initialize the HubSpot client
+    const hubspotClient = new hubspot.Client({ accessToken });
+
+    // Define parameters for fetching calls
+    const limit = 10;
+    const after = req.query.after;
+    const properties = [
+      "hs_call_recording_url",
+      "hs_call_body"
+    ];
+    const propertiesWithHistory = undefined;
+    const associations = undefined;
+    const archived = false;
+
+    // Fetch calls using the Calls API
+    const apiResponse = await hubspotClient.crm.objects.calls.basicApi.getPage(
+      limit,
+      after,
+      properties,
+      
+      propertiesWithHistory,
+      associations,
+      archived
+    );
+
+    // Return the fetched call data
+    return res.json(apiResponse);
+  } catch (error) {
+    console.error("Error fetching calls from HubSpot:", error);
+    return res.status(500).json({ error: "Error fetching calls from HubSpot" });
+  }
+};
+
+exports.transcribe = async (req, res) => {
+  const url = "https://api2.charla.pro/api/v1/chats/";
+  const { filePath, settings } = req.body;  
+  // Set up the authorization headers
+  const headers = {
+    'Authorization': 'Bearer eyJhY2Nlc3MtdG9rZW4iOiJIZ0xmaXFfUWQ3ZXNNWDJSaDItU3RnIiwidG9rZW4tdHlwZSI6IkJlYXJlciIsImNsaWVudCI6ImpodEVmeU92SGRnVWxmSXRKaHhFOFEiLCJleHBpcnkiOiI0ODk1MTA4NDk3IiwidWlkIjoibWFjYXJpb2ZlbGl4ZGVAZ21haWwuY29tIn0=',
+    // 'Content-Type': 'multipart/form-data;charset=utf-8'    
+  };
+
+  // Set transcription options based on the provided settings
+  const diarize_str = settings.diarization ? "true" : "false";
+  const check_speech_str = settings.check_speech ? "true" : "false";
+  const orig_language = settings.language || "en";  // Default language is English
+
+  console.log("Starting transcription...");
+
+  // Open the audio file for upload
+  // const fileStream = fs.createReadStream("1.mp4");
+
+  // const files = {
+  //   "chat[diarize]": (null, diarize_str),
+  //   "chat[source]": (null, "api"),
+  //   "chat[audio_file_ext]": ("1.mp4", fileStream, "application/octet-stream"),
+  // };
+
+  // const filePath = path.join(__dirname, '1.mp4'); // Assuming the script and file are in the same directory  
+  const fileData = fs.readFileSync("1.mp4");  
+
+  const formData = new FormData();  
+  formData.append("chat[diarize]", "true");  
+  formData.append("chat[source]", "api");  
+  formData.append("chat[audio_file_ext]", fileData, '1.mp4');  
+  // formData.append("chat[audio_file]", fs.createReadStream("1.mp4"));
+  try {
+    // Send the audio file and settings to the Charla API
+    const response = await axios.post(url, formData, {
+      headers: {
+        ...headers, 
+   
+      }
+    });
+
+    const responseData = response.data;
+    const chat_id = responseData?.chat?.data?.id;
+    if (!chat_id) {
+      throw new Error("Charla API did not return a valid chat ID.");
+    }
+
+    console.log(`✅ File uploaded successfully. Chat ID: ${chat_id}`);
+
+    // Poll the Charla API to check when transcription is completed
+    for (let attempt = 0; attempt < 30; attempt++) {  // Retry up to 30 times (5 min approx)
+      const pollResponse = await axios.get(`https://api2.charla.pro/api/v1/chats/${chat_id}`, { headers });
+
+      if (pollResponse.status !== 200) {
+        console.error(`⚠️ Polling error: ${pollResponse.statusText}`);
+        break;  // Exit loop if polling fails
+      }
+
+      const pollData = pollResponse.data;
+      const transcribeStatus = pollData?.data?.attributes?.transcribe_status || 'pending';
+      const transcribedTextStr = pollData?.data?.attributes?.transcribed_text;
+
+      // Check if transcription is complete
+      if (transcribeStatus === "completed" && transcribedTextStr) {
+        const transcribedText = JSON.parse(transcribedTextStr);
+        const transcriptionResult = transcribedText?.segments || "No transcription found";
+
+        // Extract additional data
+        const audioUrl = pollData?.data?.attributes?.audio_url;
+        const textUrl = pollData?.data?.attributes?.text_url;
+        const summaryUrl = pollData?.data?.attributes?.summary_url;
+        const srtFileUrl = pollData?.data?.attributes?.srt_file_url;
+        const translationUrl = pollData?.data?.attributes?.translation_url;
+
+        console.log("✅ Transcription is ready!");
+        return res.status(200).json({  
+          success: true,  
+          chat_id,  
+          transcription: transcriptionResult,  
+          language: transcribedText.language,  
+          audio_url: audioUrl,  
+          text_url: textUrl,  
+          summary_url: summaryUrl,  
+          srt_file_url: srtFileUrl,  
+          translation_url: translationUrl  
+        });  
+      }
+
+      // Wait for 10 seconds before polling again
+      console.log(`⏳ Transcription status: ${transcribeStatus}... Retrying in 10 seconds.`);
+      await new Promise(resolve => setTimeout(resolve, 10000));
+    }
+
+    // If transcription was not completed after all attempts
+    throw new Error("Transcription timed out.");
+
+  } catch (error) {
+    console.error("Error during transcription:", error);
+    throw new Error("Error during transcription process.");
+  }
+};
+
+
