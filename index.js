@@ -19,7 +19,7 @@ connectDB();
 //     origin: "*",
 //   })
 // );
-app.use(cors());  
+app.use(cors({ origin: 'https://frontend-build-fawn.vercel.app' }));
 
 app.use(express.json());
 
