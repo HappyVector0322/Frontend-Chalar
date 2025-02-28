@@ -19,7 +19,10 @@ connectDB();
 //     origin: "*",
 //   })
 // );
-app.use(cors({ origin: 'https://frontend-build-fawn.vercel.app' }));
+app.use(cors({  
+  origin: 'https://frontend-build-fawn.vercel.app',  
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']  
+}));  
 
 app.use(express.json());
 
