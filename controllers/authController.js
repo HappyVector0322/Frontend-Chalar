@@ -58,6 +58,7 @@ exports.authorize = (req, res) => {
   const scopes = process.env.scopes;
   // console.log(clientId);
   console.log("here");
+  console.log(clientId);
   if (clientId !== undefined) {
     // const authorizationUrl = `https://app.hubspot.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes}`;
     //  const authorizationUrl = 'https://app-na2.hubspot.com/oauth/authorize?client_id=08b2c303-792b-42f1-b0ec-f7ddbf53f4b3&redirect_uri=https://real-front-chalar.vercel.app/api/auth/oauth-callback&scope=content%20automation%20oauth%20crm.objects.contacts.read';
